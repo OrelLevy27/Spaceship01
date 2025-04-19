@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Pixel Spaceship Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.js"></script>
+    <style> body { margin: 0; overflow: hidden; } </style>
+  </head>
+  <body>
+    <script>
+      const aspectRatio = 4 / 5;
+      let spaceship;
+      let asteroids = [];
+      let asteroidSpawnRate = 60; // frames
+
+      function setup() {
+        let h = 600;
+        createCanvas(h * aspectRatio, h);
+        spaceship = new Spaceship();
+      }
+
+      function draw() {
+        background(10);
+
+        // Update and draw spaceship
+        spaceship.update();
+        spaceship.display();
+
+        // Spawn asteroids
+        if (frameCount % asteroidSpawnRate === 0) {
+          asteroids.push(new Asteroid());
+        }
+
+        // Update and draw asteroids
+        for (let i = asteroids.length - 1; i >= 0; i--) {
+          asteroids[i].update();
+          asteroids[i].display();
+
+          // Check for collision
+          if (asteroids[i].hits(spaceship)) {
+            noLoop(); // Game Over
+            textSize(32);
+            fill(255, 0, 0);
+            textAlign(CENTER, CENTER);
+            text("Game Over!", width / 2, height / 2);
+          }
+
+          // Remove offscreen asteroids
+          if (asteroids[i].offscreen()) {
+            asteroids.splice(i, 1);
+          }
+        }
+      }
+
+      function keyPressed() {
+        if (keyCode === LEFT_ARROW) spaceship.move(-1, 0);
+        if (keyCode === RIGHT_ARROW) spaceship.move(1, 0);
+        if (keyCode === UP_ARROW) spaceship.move(0, -1);
+        if (keyCode === DOWN_ARROW) spaceship.move(0, 1);
+      }
+
+      class Spaceship {
+        constructor() {
+          this.size = 20;
+          this.x = width / 2;
+          this.y = height / 2;
+          this.speed = 5;
+        }
+
+        move(dx, dy) {
+          this.x += dx * this.speed;
+          this.y += dy * this.speed;
+          this.x = constrain(this.x, 0, width);
+          this.y = constrain(this.y, 0, height);
+        }
+
+        update() {}
+
+        display() {
+          fill(0, 255, 255);
+          rect(this.x - 10, this.y - 10, 20, 20);
+        }
+      }
+
+      class Asteroid {
+        constructor() {
+          this.size = random(20, 40);
+          this.x = random([0, width, random(width)]);
+          this.y = random([0, height, random(height)]);
+          this.vx = random(-2, 2);
+          this.vy = random(-2, 2);
+        }
+
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+        }
+
+        display() {
+          fill(200);
+          ellipse(this.x, this.y, this.size);
+        }
+
+        hits(ship) {
+          let d = dist(this.x, this.y, ship.x, ship.y);
+          return d < this.size / 2 + ship.size / 2;
+        }
+
+        offscreen() {
+          return (
+            this.x < -this.size ||
+            this.x > width + this.size ||
+            this.y < -this.size ||
+            this.y > height + this.size
+          );
+        }
+      }
+    </script>
+  </body>
+</html>
